@@ -12,6 +12,7 @@ output: html_document
 | Project URL            | https://github.com/ponmp/PUBPOLDeliverableMain |
 | Deliverable 1          | https://ponmp.github.io/deliverableone/ |
 | Deliverable 2          | https://ponmp.github.io/deliverabletwo/ |
+| Deliverable 3          | https://ponmp.github.io/deliverablethree/ |
 | Organization URL       | https://github.com/HedgehogsAnonymous           |
 |                        |                  |
 
