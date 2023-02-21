@@ -1,0 +1,158 @@
+---
+title: "Deliverable 2"
+author: "Matthew Pon"
+date: "2023-02-22"
+output: html_document
+---
+<br> 
+<center><img src="https://hengeofthehedge.ddns.net/index.php/apps/theming/icon?v=98fbc42f" width="500"></center>
+
+|                        |                  |
+| ---------------------- | ---------------- |
+| Project URL            | https://github.com/ponmp/PUBPOLDeliverableMain |
+| Deliverable 1          | https://ponmp.github.io/deliverableone/ |
+| Deliverable 2          | https://ponmp.github.io/deliverabletwo/ |
+| Organization URL       | https://github.com/HedgehogsAnonymous           |
+|                        |                  |
+
+```{r setup, echo=FALSE, include=FALSE}
+# loading relevant libraries
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+#library(rigr)
+library(knitr)
+#library(epiR)
+#library(cluster)
+library(ggplot2)
+#library(dplyr)
+library(corrplot)
+```
+
+## Second part of Deliverable
+
+```{r, echo=FALSE, include=TRUE}
+# Importing the Dataset we prepared in Python from Github
+MasterTableRAW <- readRDS(url("https://github.com/ponmp/PUBPOLDeliverableMain/raw/main/MasterTable.RDS","rb"))
+```
+
+## Working with the data
+Importing the data we prepared in Python, we average (mean) the suicide rates across the years represented by the additional data. We then create three independent variables by combining relevant variables to create "Substance Abuse," "Happiness," and "Progress." Finally, we can then conduct a liner regression against average suicide rates.
+
+```{r, echo=TRUE, include=FALSE}
+# We need to average the suicide rates to analyze the data.
+# First we create a new column that averages suicide from relevant years. The years should match the range the other data was recorded from.
+# Making an average of the Suicide rates in the years represented by the other data as a new column
+# We pick columns 12 to 22 and take the mean for each country and assign the mean to a new column called SuicideAverage
+MasterTableRAW$SuicideAverage <- rowMeans(MasterTableRAW[ , c(11:21)])
+MasterTableRAW
+```
+
+```{r, echo=TRUE, include=FALSE}
+# Now we get can drop the individual years from the table and look for trends in the data.
+# dropping columns for a better table
+MasterTable <- MasterTableRAW[ -c(2:21) ]
+MasterTable
+```
+
+```{r, echo=TRUE, include=FALSE}
+# Taking a non weighted average of all substance abuse.
+# Creating new Column for substance abuse
+# these were given as a rate so we find a mean
+MasterTable$SubstanceAbuse <- rowMeans(MasterTable[ , c(2,3,5)])
+```
+Here is a correlation matrix of our variables. 
+```{r, echo=FALSE, include=TRUE}
+# create a correlation matrix after dropping index and already used variables
+datamatrix <- cor(MasterTable[ , -c(1,2,3,5,23)])
+corrplot(datamatrix, method="number")
+```
+```{r, echo=TRUE, include=FALSE}
+# Taking relevant values and creating a formula to calculate depression.
+# Create new Column for depression.
+# These are given as percentages so we divide by 100
+# Satisfaction / 100
+Satisfaction <- MasterTable %>% pull(Satisfaction)/100
+# Personal Rights / 100
+Rights <- MasterTable %>% pull(`Personal Rights`)/100
+# personal freedom /100
+Freedom <- MasterTable %>% pull(`Personal Freedom and Choice`)/100
+# foundations of wellbeing /100
+Wellbeing <- MasterTable %>% pull(`Foundations of Wellbeing`)/100
+# foundations of opportunity /100
+Opportunity <- MasterTable %>% pull(Opportunity)/100
+# adding up all the factors that contribute to depression
+MasterTable$Happiness <- (Satisfaction + Rights + Freedom + Wellbeing + Opportunity)
+```
+
+```{r, echo=TRUE, include=FALSE}
+# Taking relevant values for Progress
+# Create a new column for Progress
+# percentages
+Progress <- MasterTable %>% pull(`Social Progress Score`)/100
+Needs <- MasterTable %>% pull(`Basic Human Needs`)/100
+Medical <- MasterTable %>% pull(`Nutrition and Basic Medical Care`)/100
+Sanitation <- MasterTable %>% pull(`Water and Sanitation`)/100
+Shelter <- MasterTable %>% pull(Shelter)/100
+Safety <- MasterTable %>% pull(`Personal Safety`)/100
+MasterTable$Progress <- (Progress + Needs + Medical + Sanitation + Shelter + Safety)
+```
+
+### Linear Regression
+
+We can use a histogram to check the independent and dependent variables for normality.
+
+```{r, echo=FALSE, include=TRUE}
+# Create a histogram for Suicide
+MasterTable %>% pull(SuicideAverage) %>% hist(xlab = "Suicides per 100,000 people", main = "Histogram of Suicide Rates")
+```
+
+```{r, echo=FALSE, include=TRUE}
+# Create a histogram for Substance Abuse
+MasterTable %>% pull(SubstanceAbuse) %>% hist(xlab = "Substance Abuse Score", main = "Histogram of Substance Abuse")
+```
+
+```{r, echo=FALSE, include=TRUE}
+# histogram for happiness
+MasterTable %>% pull(Happiness) %>% hist(xlab = "Happiness Score", main = "Histogram of Happiness Scores")
+```
+
+```{r, echo=FALSE, include=TRUE}
+# histogram for social progress
+MasterTable %>% pull(Progress) %>% hist(xlab = "Social Progress Score", main = "Histogram of Social Progress Scores")
+```
+
+Normality is "good enough." Suicide rates and social progress show right and left skews.
+We can now conduct regression
+
+Scatterplot of Suicide and Substance Abuse
+```{r, echo=FALSE, include=TRUE}
+# creating a scatterplot for suicide vs substance abuse
+ggplot(MasterTable, aes(x=SuicideAverage, y=SubstanceAbuse)) + geom_point() + geom_smooth(method=lm, se=FALSE)
+```
+
+Scatterplot of Suicide and Happiness
+```{r, echo=FALSE, include=TRUE}
+# creating a scatterplot for suicide vs happiness
+ggplot(MasterTable, aes(x=SuicideAverage, y=Happiness)) + geom_point() + geom_smooth(method=lm, se=FALSE)
+```
+
+Scatterplot of Suicide and Progress
+```{r, echo=FALSE, include=TRUE}
+# creating a scatterplot for suicide vs happiness
+ggplot(MasterTable, aes(x=SuicideAverage, y=Progress)) + geom_point() + geom_smooth(method=lm, se=FALSE)
+```
+
+Multiple regression of Average Suicide Rate against Substance Abuse, Happiness, and Progress.
+```{r, echo=FALSE, include=TRUE}
+# create multiple regression and output summary
+MRegress <- lm(SuicideAverage ~ SubstanceAbuse + Happiness + Progress, data = MasterTable)
+summary(MRegress)
+```
+
+While we conducted regression analysis on three independent variables, the only one that showed significance with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.1. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a negative 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
+
+# Appendix
+
+**R code used:**
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
