@@ -164,6 +164,11 @@ summary(MRegress)
 ```
 
 While we conducted regression analysis on three independent variables, the only one that showed significance in this model with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.05. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a decrease of 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
+```{r, echo=FALSE, include=TRUE}
+# Chi-squared of suicides and substance abuse outside of model
+chisq.test(MasterTable$SuicideAverage, MasterTable$SubstanceAbuse)
+```
+However, if we took a chi-squared test of average suicides and substance abuse, the one previously calculated to have the most significance, we do not find a significant relationship with p>0.05 and fail to reject the null hypothesis. There is no relationship in the above variables. Substance abuse only holds significance in the presence of happiness and progress.
 
 ## Checking work
 
@@ -193,7 +198,6 @@ There is no colinearity since they are all less than 5.
 # testing for colinearity
 vif(Hypo3)
 ```
-
 # Appendix
 
 **R code used:**
