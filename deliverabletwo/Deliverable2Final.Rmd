@@ -27,6 +27,10 @@ library(knitr)
 library(ggplot2)
 #library(dplyr)
 library(corrplot)
+library(rsq)
+library(lmtest)
+library(car)
+#library(sjPlot)
 ```
 
 ## Second part of Deliverable
@@ -122,8 +126,17 @@ MasterTable %>% pull(Happiness) %>% hist(xlab = "Happiness Score", main = "Histo
 MasterTable %>% pull(Progress) %>% hist(xlab = "Social Progress Score", main = "Histogram of Social Progress Scores")
 ```
 
-Normality is "good enough." Suicide rates and social progress show right and left skews.
-We can now conduct regression
+As well as a Shipiro-Wilk tests.
+```{r, echo=FALSE, include=TRUE}
+# showing normality of the data with a Shapiro-Wilk test.
+shapiro.test(MasterTable$SuicideAverage); shapiro.test(MasterTable$SubstanceAbuse); shapiro.test(MasterTable$Happiness); shapiro.test(MasterTable$Progress) 
+```
+
+Normality is good enough, Happiness and Substance Abuse also graphically looks normally distributed. 
+
+Suicide rates and social progress however show right and left skews and are not normally distributed.
+
+## Here are visuals of the independent variables against the dependent variable.
 
 Scatterplot of Suicide and Substance Abuse
 ```{r, echo=FALSE, include=TRUE}
@@ -143,14 +156,43 @@ Scatterplot of Suicide and Progress
 ggplot(MasterTable, aes(x=SuicideAverage, y=Progress)) + geom_point() + geom_smooth(method=lm, se=FALSE)
 ```
 
-Multiple regression of Average Suicide Rate against Substance Abuse, Happiness, and Progress.
+## Multiple regression of Average Suicide Rate against Substance Abuse, Happiness, and Progress.
 ```{r, echo=FALSE, include=TRUE}
-# create multiple regression and output summary
-MRegress <- lm(SuicideAverage ~ SubstanceAbuse + Happiness + Progress, data = MasterTable)
+# create multiple regression of all three and output summary
+MRegress <- glm(SuicideAverage ~ SubstanceAbuse + Happiness + Progress, data = MasterTable)
 summary(MRegress)
 ```
 
-While we conducted regression analysis on three independent variables, the only one that showed significance with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.1. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a negative 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
+While we conducted regression analysis on three independent variables, the only one that showed significance in this model with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.05. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a decrease of 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
+
+## Checking work
+
+Hypothesis tests
+```{r, echo=FALSE, include=TRUE}
+# using functions provided in class against above
+result1 <- formula(MasterTable$SuicideAverage ~ SubstanceAbuse)
+result2 <- formula(MasterTable$SuicideAverage ~ SubstanceAbuse + Happiness)
+result3 <- formula(MasterTable$SuicideAverage ~ SubstanceAbuse + Happiness + Progress)
+Hypo1 <- glm(result1, data = MasterTable, family = 'gaussian')
+Hypo2 <- glm(result2, data = MasterTable, family = 'gaussian')
+Hypo3 <- glm(result3, data = MasterTable, family = 'gaussian')
+summary(Hypo1); summary(Hypo2); summary(Hypo3)
+```
+Chi-squared
+```{r, echo=FALSE, include=TRUE}
+# running chi-squared test
+anova(Hypo1,Hypo2,Hypo3, test = "Chisq")
+```
+Normality of the model is true at P<0.05.
+```{r, echo=FALSE, include=TRUE}
+# testing model for normality
+shapiro.test(Hypo3$residuals)
+```
+There is no colinearity since they are all less than 5.
+```{r, echo=FALSE, include=TRUE}
+# testing for colinearity
+vif(Hypo3)
+```
 
 # Appendix
 
