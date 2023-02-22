@@ -103,8 +103,13 @@ MasterTable$Progress <- (Progress + Needs + Medical + Sanitation + Shelter + Saf
 ```
 
 ### Linear Regression
+The hypothesis that I want to test is that the dependent variable is related to the independent variables. We can test this by the following set of hypothesis.
 
-We can use a histogram to check the independent and dependent variables for normality.
+Null hypothsis: There is no statisitically significant difference between suicide rates and the presence of substance abuse, happiness, and progress.
+
+Alternate hypothesis: There is a statistically significant difference between suicide rates and the presence of substance abuse, happiness, and progress.
+
+First we can use a histogram to visually check the independent and dependent variables for normality.
 
 ```{r, echo=FALSE, include=TRUE}
 # Create a histogram for Suicide
@@ -126,7 +131,7 @@ MasterTable %>% pull(Happiness) %>% hist(xlab = "Happiness Score", main = "Histo
 MasterTable %>% pull(Progress) %>% hist(xlab = "Social Progress Score", main = "Histogram of Social Progress Scores")
 ```
 
-As well as a Shipiro-Wilk tests.
+We can also check numerically with a Shipiro-Wilk tests.
 ```{r, echo=FALSE, include=TRUE}
 # showing normality of the data with a Shapiro-Wilk test.
 shapiro.test(MasterTable$SuicideAverage); shapiro.test(MasterTable$SubstanceAbuse); shapiro.test(MasterTable$Happiness); shapiro.test(MasterTable$Progress) 
@@ -135,6 +140,8 @@ shapiro.test(MasterTable$SuicideAverage); shapiro.test(MasterTable$SubstanceAbus
 Normality is good enough, Happiness and Substance Abuse also graphically looks normally distributed. 
 
 Suicide rates and social progress however show right and left skews and are not normally distributed.
+
+Unfortunately this is the data we have so we proceed with the hyoptheis testing.
 
 ## Here are visuals of the independent variables against the dependent variable.
 
@@ -163,12 +170,12 @@ MRegress <- glm(SuicideAverage ~ SubstanceAbuse + Happiness + Progress, data = M
 summary(MRegress)
 ```
 
-While we conducted regression analysis on three independent variables, the only one that showed significance in this model with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.05. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a decrease of 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
+While we conducteda multiople regression analysis of our dependent varable on three independent variables, the only one that showed significance in this model with a P-value of 0.006 was Substance Abuse. The other independent variables, happiness and progress, were not statistically significant enough at P>0.05. Substance abuse showed a positive relationship where the average suicide rate would increase by 0.6076 incidents per 100,000 people per 1 average unit of increase in substance abuse. Happiness showed a positive 0.1096 incidents per 100,000 people per 1 score of happiness. Progress showed a decrease of 2.3763 incidents per 100,000 people per 1 score of progress. Again neither happiness nor progress were statistically significant. This suggests that, from the data collected off Wikipedia of alcohol, tobacco, and cocaine use, mean substance abuse and average suicide rate are related while happiness and social progress, as I calculated, are not.
 ```{r, echo=FALSE, include=TRUE}
 # Chi-squared of suicides and substance abuse outside of model
 chisq.test(MasterTable$SuicideAverage, MasterTable$SubstanceAbuse)
 ```
-However, if we took a chi-squared test of average suicides and substance abuse, the one previously calculated to have the most significance, we do not find a significant relationship with p>0.05 and fail to reject the null hypothesis. There is no relationship in the above variables. Substance abuse only holds significance in the presence of happiness and progress.
+However, if we took a chi-squared test of average suicides and substance abuse, the one previously calculated to have the most significance, we do not find a significant relationship with p>0.05 and fail to reject the null hypothesis. There is no relationship in the above variables. Substance abuse only holds significance in the presence of happiness and progress. Our data fails to support our alternative hypothesis.
 
 ## Checking work
 
